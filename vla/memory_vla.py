@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from functools import partial
 from pathlib import Path
@@ -76,7 +76,7 @@ class CrossTransformerBlock(nn.Module):
         self.v_proj = nn.Linear(feature_dim, feature_dim)
         self.attn_norm = nn.LayerNorm(feature_dim)
 
-        # Feed鈥慒orward Network
+        # Feed‑Forward Network
         self.ffn = nn.Sequential(
             nn.Linear(feature_dim, feature_dim * 4),
             nn.GELU(),
@@ -310,7 +310,7 @@ class CogMemBank(nn.Module):
                 retrieved_episode_mem = query
 
             else:
-                # without history锛歸orking memory as episode memory
+                # without history：working memory as episode memory
                 retrieved_episode_mem = working_mem  # (1, N, D)
 
             # 3) memory adaptive fusion
@@ -399,8 +399,14 @@ class MemoryVLA(nn.Module):
 
         self.cur_timestep = 0
 
-        self.vision_dim = self.vlm.vision_backbone.dino_featurizer.patch_embed.proj.weight.shape[0] + \
-                 self.vlm.vision_backbone.siglip_featurizer.patch_embed.proj.weight.shape[0]
+        # Compute vision_dim: dual-stream (DINOv2+SigLIP) or single-stream (V-JEPA 2, etc.)
+        if hasattr(self.vlm.vision_backbone, 'dino_featurizer'):
+            self.vision_dim = (
+                self.vlm.vision_backbone.dino_featurizer.patch_embed.proj.weight.shape[0]
+                + self.vlm.vision_backbone.siglip_featurizer.patch_embed.proj.weight.shape[0]
+            )
+        else:
+            self.vision_dim = self.vlm.vision_backbone.embed_dim
 
 
         self.per_compr = BottleneckSE(
@@ -510,13 +516,8 @@ class MemoryVLA(nn.Module):
             return_dict=return_dict,
         )
 
-        # extract the visual token number
-        if self.vlm.vision_backbone.featurizer is not None:
-            num_patch = self.vlm.vision_backbone.featurizer.patch_embed.num_patches
-        elif hasattr(self.vlm.vision_backbone, 'siglip_featurizer') and self.vlm.vision_backbone.siglip_featurizer is not None:
-            num_patch = self.vlm.vision_backbone.siglip_featurizer.patch_embed.num_patches
-        else:
-            raise ValueError("No vision backbone found")
+        # extract the visual token number (generic across all backbone types)
+        num_patch = self.vlm.vision_backbone.num_patches
 
         # extract the last hidden state and the learnable EOS token feature
         last_hidden_state = output.hidden_states[-1]

@@ -1,4 +1,4 @@
-﻿"""
+"""
 materialize.py
 
 Factory class for initializing Vision Backbones, LLM Backbones, and VLMs from a set registry; provides and exports
@@ -18,6 +18,7 @@ from prismatic.models.backbones.vision import (
     ImageTransform,
     IN1KViTBackbone,
     SigLIPViTBackbone,
+    VJEPA2ViTBackbone,
     VisionBackbone,
 )
 from prismatic.models.vlms import PrismaticVLM
@@ -47,6 +48,11 @@ VISION_BACKBONES = {
     # === Fused Backbones ===
     "dinoclip-vit-l-336px": {"cls": DinoCLIPViTBackbone, "kwargs": {"default_image_size": 336}},
     "dinosiglip-vit-so-384px": {"cls": DinoSigLIPViTBackbone, "kwargs": {"default_image_size": 384}},
+
+    # === V-JEPA 2 Backbones ===
+    "vjepa2-vit-large-224px": {"cls": VJEPA2ViTBackbone, "kwargs": {"default_image_size": 224}},
+    "vjepa2-vit-huge-224px": {"cls": VJEPA2ViTBackbone, "kwargs": {"default_image_size": 224}},
+    "vjepa2-vit-giant-256px": {"cls": VJEPA2ViTBackbone, "kwargs": {"default_image_size": 256}},
 }
 
 

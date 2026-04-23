@@ -1,4 +1,4 @@
-﻿"""
+"""
 models.py
 
 Draccus Dataclass Definition for a ModelConfig object, with various registered subclasses for each model family and
@@ -123,7 +123,7 @@ class LLaVa_v15_Reproduction_13B(LLaVa_v15_Reproduction_7B):
 # === Section 4.1 :: Optimization Procedure ===
 
 
-# Section 4.1A :: 馃殌 --> Necessity of Multi-Stage Training
+# Section 4.1A :: 🚀 --> Necessity of Multi-Stage Training
 @dataclass
 class Exp_7B_One_Stage(LLaVa_v15_Reproduction_7B):
     model_id: str = "one-stage+7b"
@@ -136,7 +136,7 @@ class Exp_13B_One_Stage(LLaVa_v15_Reproduction_13B):
     arch_specifier: str = "no-align+gelu-mlp"
 
 
-# Section 4.1B :: 馃洜锔?--> Full Finetuning through Visual Backbones
+# Section 4.1B :: 🛠️ --> Full Finetuning through Visual Backbones
 #   =>> Note :: Run with `--stage full-finetune`
 @dataclass
 class Exp_7B_Full_Finetune_Multi_Stage(LLaVa_v15_Reproduction_7B):
@@ -151,7 +151,7 @@ class Exp_7B_Full_Finetune_One_Stage(Exp_7B_One_Stage):
 # === Section 4.2 :: Image Processing and Visual Representations ===
 
 
-# Section 4.2A :: 馃摳 --> Choosing a Pretrained Representation
+# Section 4.2A :: 📸 --> Choosing a Pretrained Representation
 @dataclass
 class Exp_7B_IN1K_ViT_L_p16_224px(Exp_7B_One_Stage):
     model_id: str = "in1k-224px+7b"
@@ -176,7 +176,7 @@ class Exp_7B_SigLIP_ViT_SO_p14_224px(Exp_7B_One_Stage):
     vision_backbone_id: str = "siglip-vit-so400m"
 
 
-# Section 4.2B :: 馃搻 --> Choosing an Image Preprocessing Strategy
+# Section 4.2B :: 📐 --> Choosing an Image Preprocessing Strategy
 @dataclass
 class Exp_7B_CLIP_ViT_L_p14_336px_Resize_Crop(Exp_7B_One_Stage):
     model_id: str = "clip-336px-resize-crop+7b"
@@ -210,7 +210,7 @@ class Exp_7B_SigLIP_ViT_SO_p14_384px_Resize_Naive(Exp_7B_One_Stage):
     image_resize_strategy: str = "resize-naive"
 
 
-# Section 4.2D :: 馃 --> Stacking/Ensembling Visual Representations
+# Section 4.2D :: 🥞 --> Stacking/Ensembling Visual Representations
 @dataclass
 class Exp_7B_DINOCLIP_ViT_L_p14_336px_Letterbox(Exp_7B_One_Stage):
     model_id: str = "dinoclip-336px-letterbox+7b"
@@ -246,7 +246,7 @@ class Exp_7B_DINOSigLIP_ViT_L_p14_384px_Resize_Naive(Exp_7B_One_Stage):
 # === Section 4.3 :: Language Models ===
 
 
-# Section 4.3A :: 馃摑 --> Base vs. Instruct-Tuned (Chat) LLMs
+# Section 4.3A :: 📝 --> Base vs. Instruct-Tuned (Chat) LLMs
 @dataclass
 class Exp_7B_Llama2(Exp_7B_One_Stage):
     model_id: str = "llama2+7b"
@@ -290,7 +290,7 @@ class Ext_Exp_3B_Phi_2(Exp_7B_One_Stage):
     llm_backbone_id: str = "phi-2-3b"
 
 
-# Section 4.3B :: 鉁岋笍 --> Co-training on Language-only Data
+# Section 4.3B :: ✌️ --> Co-training on Language-only Data
 #   =>> Note :: Run with `--dataset.type "llava-multimodal" (multimodal data only / no co-training)
 @dataclass
 class Exp_7B_Vicuna_No_Cotraining(Exp_7B_One_Stage):
@@ -306,7 +306,7 @@ class Exp_7B_Llama2_No_Cotraining(Exp_7B_One_Stage):
 # === Section 4.4 :: Scaling Properties - Train Time & Data ===
 
 
-# Section 4.4A :: 鈴?--> Scaling Train Time
+# Section 4.4A :: ⏰ --> Scaling Train Time
 @dataclass
 class Exp_7B_1p25_Epochs(Exp_7B_One_Stage):
     model_id: str = "train-1.25-epochs+7b"
@@ -331,7 +331,7 @@ class Exp_7B_3_Epochs(Exp_7B_One_Stage):
     finetune_epochs: int = 3
 
 
-# Section 4.4B :: 馃摎 --> Scaling Data
+# Section 4.4B :: 📚 --> Scaling Data
 #   =>> Note :: Run with `--dataset.type "llava-lvis4v"`
 @dataclass
 class Exp_7B_LLaVa_LVIS4V(Exp_7B_One_Stage):
@@ -497,6 +497,37 @@ class Prism_7B_DINOSigLIP_224px(Exp_7B_One_Stage):
     finetune_epochs: int = 2
 
 
+# === V-JEPA 2 Prisms ===
+@dataclass
+class Prism_7B_VJEPA2_Large_224px(Exp_7B_One_Stage):
+    model_id: str = "prism-vjepa2-large-224px+7b"
+    vision_backbone_id: str = "vjepa2-vit-large-224px"
+    image_resize_strategy: str = "resize-naive"
+    llm_backbone_id: str = "llama2-7b-pure"
+    arch_specifier: str = "no-align+gelu-mlp"
+    finetune_epochs: int = 2
+
+
+@dataclass
+class Prism_7B_VJEPA2_Huge_224px(Exp_7B_One_Stage):
+    model_id: str = "prism-vjepa2-huge-224px+7b"
+    vision_backbone_id: str = "vjepa2-vit-huge-224px"
+    image_resize_strategy: str = "resize-naive"
+    llm_backbone_id: str = "llama2-7b-pure"
+    arch_specifier: str = "no-align+gelu-mlp"
+    finetune_epochs: int = 2
+
+
+@dataclass
+class Prism_7B_VJEPA2_Giant_256px(Exp_7B_One_Stage):
+    model_id: str = "prism-vjepa2-giant-256px+7b"
+    vision_backbone_id: str = "vjepa2-vit-giant-256px"
+    image_resize_strategy: str = "resize-naive"
+    llm_backbone_id: str = "llama2-7b-pure"
+    arch_specifier: str = "no-align+gelu-mlp"
+    finetune_epochs: int = 2
+
+
 # === Define a Model Registry Enum for Reference & Validation ===
 @unique
 class ModelRegistry(Enum):
@@ -573,6 +604,11 @@ class ModelRegistry(Enum):
     OPT_DINOSIGLIP_224PX_RESIZE_NAIVE = Opt_7B_DINOSigLIP_ViT_SO_p14_224px_Resize_Naive
     PRISM_DINOSIGLIP_224PX_CONTROLLED_7B = Prism_7B_DINOSigLIP_224px_Controlled
     PRISM_DINOSIGLIP_224PX_7B = Prism_7B_DINOSigLIP_224px
+
+    # === V-JEPA 2 Prisms ===
+    PRISM_VJEPA2_LARGE_224PX_7B = Prism_7B_VJEPA2_Large_224px
+    PRISM_VJEPA2_HUGE_224PX_7B = Prism_7B_VJEPA2_Huge_224px
+    PRISM_VJEPA2_GIANT_256PX_7B = Prism_7B_VJEPA2_Giant_256px
 
     @property
     def model_id(self) -> str:

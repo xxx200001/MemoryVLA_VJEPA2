@@ -1,4 +1,4 @@
-﻿"""
+"""
 registry.py
 
 Exhaustive list of pretrained VLMs (with full descriptions / links to corresponding names and sections of paper).
@@ -16,7 +16,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "multi-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -29,7 +29,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "multi-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 13B",
+            "language_model": "Vicuña v1.5 13B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -44,7 +44,7 @@ MODEL_REGISTRY = {
             "Frozen ViT (Single-Stage)",
             "CLIP ViT-L 336px (Letterbox)",
             "CLIP ViT-L 336px",
-            "Vicu帽a v1.5 7B",
+            "Vicuña v1.5 7B",
             "1 Epoch",
             "Base",
         ],
@@ -53,7 +53,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -63,14 +63,14 @@ MODEL_REGISTRY = {
         "names": [
             "One-Stage 13B",
             "Single-Stage 13B",
-            "Vicu帽a v1.5 13B",
+            "Vicuña v1.5 13B",
         ],
         "description": {
             "name": "Single-Stage 13B",
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 13B",
+            "language_model": "Vicuña v1.5 13B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -84,7 +84,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "multi-stage-full-finetune",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -97,7 +97,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage-full-finetune",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -112,7 +112,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "ImageNet-21K+1K ViT-L/16 @ 224px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         },
@@ -125,7 +125,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "DINOv2 ViT-L/14 @ 224px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         },
@@ -138,7 +138,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 224px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         },
@@ -151,7 +151,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "SigLIP ViT-SO/14 @ 224px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         },
@@ -165,7 +165,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Resize Crop",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -178,7 +178,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Naive Resize",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -191,7 +191,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "SigLIP ViT-SO/14 @ 384px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -204,7 +204,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "SigLIP ViT-SO/14 @ 384px",
             "image_processing": "Resize Crop",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -217,7 +217,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "SigLIP ViT-SO/14 @ 384px",
             "image_processing": "Naive Resize",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -231,7 +231,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "DINOv2 ViT-L/14 + CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -244,7 +244,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "DINOv2 ViT-L/14 + CLIP ViT-L/14 @ 336px",
             "image_processing": "Naive Resize",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -257,7 +257,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "DINOv2 ViT-L/14 + SigLIP ViT-L/14 @ 384px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -270,7 +270,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "DINOv2 ViT-L/14 + SigLIP ViT-L/14 @ 384px",
             "image_processing": "Naive Resize",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
@@ -306,13 +306,13 @@ MODEL_REGISTRY = {
 
     "vicuna-no-cotraining+7b": {
         "model_id": "vicuna-no-cotraining+7b",
-        "names": ["Vicu帽a v1.5 7B (No Co-training)"],
+        "names": ["Vicuña v1.5 7B (No Co-training)"],
         "description": {
-            "name": "Vicu帽a v1.5 7B (No Co-training)",
+            "name": "Vicuña v1.5 7B (No Co-training)",
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Multimodal-Only"],
             "train_epochs": 1,
         },
@@ -340,7 +340,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1.25,
         }
@@ -353,7 +353,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1.5,
         }
@@ -366,7 +366,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 2,
         }
@@ -379,7 +379,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 3,
         }
@@ -393,7 +393,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct", "LVIS-Instruct-4V"],
             "train_epochs": 1,
         }
@@ -406,7 +406,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct", "LRV-Instruct"],
             "train_epochs": 1,
         }
@@ -419,7 +419,7 @@ MODEL_REGISTRY = {
             "optimization_procedure": "single-stage",
             "visual_representation": "CLIP ViT-L/14 @ 336px",
             "image_processing": "Letterbox",
-            "language_model": "Vicu帽a v1.5 7B",
+            "language_model": "Vicuña v1.5 7B",
             "datasets": ["LLaVa v1.5 Instruct", "LVIS-Instruct-4V", "LRV-Instruct"],
             "train_epochs": 1,
         }
@@ -682,6 +682,47 @@ MODEL_REGISTRY = {
             "datasets": ["LLaVa v1.5 Instruct"],
             "train_epochs": 1,
         }
+    },
+
+    # === V-JEPA 2 Models ===
+    "prism-vjepa2-large-224px+7b": {
+        "model_id": "prism-vjepa2-large-224px+7b",
+        "names": ["V-JEPA 2 ViT-L 224px 7B", "Prism-VJEPA2-L 7B"],
+        "description": {
+            "name": "V-JEPA 2 ViT-L 224px 7B",
+            "optimization_procedure": "single-stage",
+            "visual_representation": "V-JEPA 2 ViT-L/16 @ 224px",
+            "image_processing": "Naive Resize",
+            "language_model": "Llama-2 7B",
+            "datasets": ["LLaVa v1.5 Instruct"],
+            "train_epochs": 2,
+        },
+    },
+    "prism-vjepa2-huge-224px+7b": {
+        "model_id": "prism-vjepa2-huge-224px+7b",
+        "names": ["V-JEPA 2 ViT-H 224px 7B", "Prism-VJEPA2-H 7B"],
+        "description": {
+            "name": "V-JEPA 2 ViT-H 224px 7B",
+            "optimization_procedure": "single-stage",
+            "visual_representation": "V-JEPA 2 ViT-H/16 @ 224px",
+            "image_processing": "Naive Resize",
+            "language_model": "Llama-2 7B",
+            "datasets": ["LLaVa v1.5 Instruct"],
+            "train_epochs": 2,
+        },
+    },
+    "prism-vjepa2-giant-256px+7b": {
+        "model_id": "prism-vjepa2-giant-256px+7b",
+        "names": ["V-JEPA 2 ViT-g 256px 7B", "Prism-VJEPA2-g 7B"],
+        "description": {
+            "name": "V-JEPA 2 ViT-g 256px 7B",
+            "optimization_procedure": "single-stage",
+            "visual_representation": "V-JEPA 2 ViT-g/16 @ 256px",
+            "image_processing": "Naive Resize",
+            "language_model": "Llama-2 7B",
+            "datasets": ["LLaVa v1.5 Instruct"],
+            "train_epochs": 2,
+        },
     },
 }
 
