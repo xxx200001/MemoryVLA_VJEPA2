@@ -94,6 +94,24 @@ class Exp_CogACT_OXE_Magic_Soup_Plus_Minus(Exp_SigLIP_224px_Bridge):
 
     epochs: int = 100
 
+
+# === V-JEPA 2 VLA Training Config ===
+@dataclass
+class Exp_VJEPA2_Large_OXE_Diffusion(Exp_SigLIP_224px_Bridge):
+    vla_id: str = "prism-vjepa2-large-224px+oxe+diffusion"
+    base_vlm: Union[str, Path] = "prism-vjepa2-large-224px+7b"
+
+    data_mix: str = "oxe_magic_soup_plus_minus"
+    shuffle_buffer_size: int = 250_000
+    expected_world_size: int = 16
+    global_batch_size: int = 256
+    per_device_batch_size: int = 16
+    max_grad_norm: float = 1.0
+    learning_rate: float = 2e-5
+
+    epochs: int = 100
+
+
 # === Define a VLA Registry Enum for Reference & Validation ===
 @unique
 class VLARegistry(Enum):
@@ -102,6 +120,9 @@ class VLARegistry(Enum):
 
     # === CogACT-VLA Pretraining Configs ===
     EXP_COGACT_OXE_MAGIC_SOUP_PLUS_MINUS = Exp_CogACT_OXE_Magic_Soup_Plus_Minus
+
+    # === V-JEPA 2 VLA Training Configs ===
+    EXP_VJEPA2_LARGE_OXE_DIFFUSION = Exp_VJEPA2_Large_OXE_Diffusion
 
     @property
     def vla_id(self) -> str:
