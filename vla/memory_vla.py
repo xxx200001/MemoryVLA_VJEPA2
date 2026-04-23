@@ -399,8 +399,14 @@ class MemoryVLA(nn.Module):
 
         self.cur_timestep = 0
 
-        self.vision_dim = self.vlm.vision_backbone.dino_featurizer.patch_embed.proj.weight.shape[0] + \
-                 self.vlm.vision_backbone.siglip_featurizer.patch_embed.proj.weight.shape[0]
+        # Compute vision_dim: dual-stream (DINOv2+SigLIP) or single-stream (V-JEPA 2, etc.)
+        if hasattr(self.vlm.vision_backbone, 'dino_featurizer'):
+            self.vision_dim = (
+                self.vlm.vision_backbone.dino_featurizer.patch_embed.proj.weight.shape[0]
+                + self.vlm.vision_backbone.siglip_featurizer.patch_embed.proj.weight.shape[0]
+            )
+        else:
+            self.vision_dim = self.vlm.vision_backbone.embed_dim
 
 
         self.per_compr = BottleneckSE(
@@ -510,8 +516,10 @@ class MemoryVLA(nn.Module):
             return_dict=return_dict,
         )
 
-        # extract the visual token number
-        if self.vlm.vision_backbone.featurizer is not None:
+        # extract the visual token number (generic across all backbone types)
+        if hasattr(self.vlm.vision_backbone, 'num_patches'):
+            num_patch = self.vlm.vision_backbone.num_patches
+        elif hasattr(self.vlm.vision_backbone, 'featurizer') and self.vlm.vision_backbone.featurizer is not None:
             num_patch = self.vlm.vision_backbone.featurizer.patch_embed.num_patches
         elif hasattr(self.vlm.vision_backbone, 'siglip_featurizer') and self.vlm.vision_backbone.siglip_featurizer is not None:
             num_patch = self.vlm.vision_backbone.siglip_featurizer.patch_embed.num_patches
