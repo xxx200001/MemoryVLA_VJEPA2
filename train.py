@@ -79,11 +79,6 @@ class TrainConfig:
     consolidate_type: str = 'tome' # Memory consolidate type, chose from ['fifo', 'tome']
     update_fused: bool = False # Whether to update fused memory
 
-    # Unified Memory Bank (experimental: implicit memory specialization via grouped attention)
-    use_unified_mem: bool = False # Use unified memory bank instead of dual per/cog banks
-    unified_dim: int = 512 # Dimension of the unified memory representation
-    unified_n_groups: int = 4 # Number of attention groups for implicit specialization
-
 
     def __post_init__(self) -> None:
         """Lift optimization parameters from `self.vla` for ease of use =>> validate on `expected_world_size`"""
