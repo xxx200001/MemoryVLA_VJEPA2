@@ -50,9 +50,9 @@ VISION_BACKBONES = {
     "dinosiglip-vit-so-384px": {"cls": DinoSigLIPViTBackbone, "kwargs": {"default_image_size": 384}},
 
     # === V-JEPA 2 Backbones ===
-    "vjepa2-vit-large-224px": {"cls": VJEPA2ViTBackbone, "kwargs": {"default_image_size": 224}},
-    "vjepa2-vit-huge-224px": {"cls": VJEPA2ViTBackbone, "kwargs": {"default_image_size": 224}},
-    "vjepa2-vit-giant-256px": {"cls": VJEPA2ViTBackbone, "kwargs": {"default_image_size": 256}},
+    "vjepa2-vit-large-224px": {"cls": VJEPA2ViTBackbone, "kwargs": {"default_image_size": 224, "vjepa2_checkpoint_path": "pretrained/vjepa2/vitl.pt"}},
+    "vjepa2-vit-huge-224px": {"cls": VJEPA2ViTBackbone, "kwargs": {"default_image_size": 224, "vjepa2_checkpoint_path": "pretrained/vjepa2/vith.pt"}},
+    "vjepa2-vit-giant-256px": {"cls": VJEPA2ViTBackbone, "kwargs": {"default_image_size": 256, "vjepa2_checkpoint_path": "pretrained/vjepa2/vitg.pt"}},
 }
 
 
