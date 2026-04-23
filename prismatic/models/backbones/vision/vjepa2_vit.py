@@ -211,6 +211,10 @@ class VJEPA2ViTBackbone(VisionBackbone):
         Returns:
             Patch features [B, num_patches, embed_dim]
         """
+        # V-JEPA 2 uses Conv3d internally (video-native), so it expects 5D input
+        # [B, C, T, H, W]. Prismatic VLM passes 4D [B, C, H, W] for images.
+        if pixel_values.dim() == 4:
+            pixel_values = pixel_values.unsqueeze(2)  # [B, 3, H, W] -> [B, 3, 1, H, W]
         return self.featurizer(pixel_values)
 
     @property
