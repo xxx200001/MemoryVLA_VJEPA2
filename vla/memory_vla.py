@@ -357,6 +357,72 @@ class PerMemBank(CogMemBank):
         )
 
 
+class GroupedCrossAttention(nn.Module):
+    """Grouped cross-attention: each group has independent QKV parameters,
+    enabling implicit specialization for different memory types.
+    Same forward(query, k, v) interface as CrossTransformerBlock."""
+    def __init__(self, dim: int, n_groups: int = 4, n_heads_per_group: int = 2):
+        super().__init__()
+        assert dim % n_groups == 0, f"dim={dim} must be divisible by n_groups={n_groups}"
+        self.n_groups = n_groups
+        self.group_dim = dim // n_groups
+
+        self.group_blocks = nn.ModuleList([
+            nn.MultiheadAttention(
+                embed_dim=self.group_dim,
+                num_heads=n_heads_per_group,
+                batch_first=True,
+            ) for _ in range(n_groups)
+        ])
+        self.attn_norm = nn.LayerNorm(dim)
+
+        self.ffn = nn.Sequential(
+            nn.Linear(dim, dim * 4),
+            nn.GELU(),
+            nn.Linear(dim * 4, dim),
+        )
+        self.ffn_norm = nn.LayerNorm(dim)
+
+    def forward(self, query: torch.Tensor, k: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
+        # Split along channel dim into groups
+        q_groups = query.chunk(self.n_groups, dim=-1)
+        k_groups = k.chunk(self.n_groups, dim=-1)
+        v_groups = v.chunk(self.n_groups, dim=-1)
+
+        out_groups = []
+        for block, qg, kg, vg in zip(self.group_blocks, q_groups, k_groups, v_groups):
+            attn_out, _ = block(qg, kg, vg)
+            out_groups.append(attn_out)
+
+        attn_out = torch.cat(out_groups, dim=-1)
+        x = self.attn_norm(query + attn_out)
+        ffn_out = self.ffn(x)
+        return self.ffn_norm(x + ffn_out)
+
+
+class UnifiedMemoryBank(CogMemBank):
+    """Unified memory bank with grouped cross-attention for implicit memory specialization.
+    Replaces CogMemBank + PerMemBank with a single bank.
+    Inherits all episode management, ToME consolidation, and gate fusion from CogMemBank.
+    Only the retrieval mechanism is replaced with GroupedCrossAttention."""
+    def __init__(self,
+                 n_groups: int = 4,
+                 n_heads_per_group: int = 2,
+                 **kwargs):
+        super().__init__(**kwargs)
+        # Replace CrossTransformerBlock with GroupedCrossAttention
+        token_size = kwargs['token_size']
+        retrieval_layers = kwargs.get('retrieval_layers', 2)
+        self.retrieval_blocks = nn.ModuleList([
+            GroupedCrossAttention(
+                dim=token_size,
+                n_groups=n_groups,
+                n_heads_per_group=n_heads_per_group,
+            )
+            for _ in range(retrieval_layers)
+        ])
+
+
 class MemoryVLA(nn.Module):
     def __init__(
         self,
@@ -376,6 +442,10 @@ class MemoryVLA(nn.Module):
         fusion_type: str = 'gate',
         consolidate_type: str = 'tome',
         update_fused: bool = False,
+        # Unified memory bank parameters (experimental)
+        use_unified_mem: bool = False,
+        unified_dim: int = 512,
+        unified_n_groups: int = 4,
         **kwargs,
     ) -> None:
         super().__init__()
@@ -398,6 +468,7 @@ class MemoryVLA(nn.Module):
         self.update_fused = update_fused
 
         self.cur_timestep = 0
+        self.use_unified_mem = use_unified_mem
 
         # Compute vision_dim: dual-stream (DINOv2+SigLIP) or single-stream (V-JEPA 2, etc.)
         if hasattr(self.vlm.vision_backbone, 'dino_featurizer'):
@@ -408,36 +479,58 @@ class MemoryVLA(nn.Module):
         else:
             self.vision_dim = self.vlm.vision_backbone.embed_dim
 
+        if not self.use_unified_mem:
+            # === Original dual-bank path ===
+            self.per_compr = BottleneckSE(
+                C_in=self.vision_dim,
+                C_mid=self.per_token_size * 2,
+                C_out=self.per_token_size,
+            )
 
-        self.per_compr = BottleneckSE(
-            C_in=self.vision_dim,
-            C_mid=self.per_token_size * 2,
-            C_out=self.per_token_size,
-        )
+            self.cog_mem_bank = CogMemBank(
+                dataloader_type=self.dataloader_type,
+                group_size=self.group_size,
+                token_size=self.cog_token_size,
+                mem_length=self.mem_length,
+                retrieval_layers=self.retrieval_layers,
+                use_timestep_pe=self.use_timestep_pe,
+                fusion_type=self.fusion_type,
+                consolidate_type=self.consolidate_type,
+                update_fused=self.update_fused,
+            )
 
-        self.cog_mem_bank = CogMemBank(
-            dataloader_type=self.dataloader_type,
-            group_size=self.group_size,
-            token_size=self.cog_token_size,
-            mem_length=self.mem_length,
-            retrieval_layers=self.retrieval_layers,
-            use_timestep_pe=self.use_timestep_pe,
-            fusion_type=self.fusion_type,
-            consolidate_type=self.consolidate_type,
-            update_fused=self.update_fused,
-        )
+            self.per_mem_bank = PerMemBank(
+                dataloader_type=self.dataloader_type,
+                group_size=self.group_size,
+                token_size=self.per_token_size,
+                mem_length=self.mem_length,
+                retrieval_layers=self.retrieval_layers,
+                use_timestep_pe=self.use_timestep_pe,
+                fusion_type=self.fusion_type,
+                consolidate_type=self.consolidate_type,
+                update_fused=self.update_fused,
+            )
+        else:
+            # === Unified memory bank path (experimental) ===
+            self.unified_dim = unified_dim
+            self.vision_proj = nn.Linear(self.vision_dim, unified_dim)
+            self.cog_proj = nn.Linear(self.cog_token_size, unified_dim)
 
-        self.per_mem_bank = PerMemBank(
-            dataloader_type=self.dataloader_type,
-            group_size=self.group_size,
-            token_size=self.per_token_size,
-            mem_length=self.mem_length,
-            retrieval_layers=self.retrieval_layers,
-            use_timestep_pe=self.use_timestep_pe,
-            fusion_type=self.fusion_type,
-            consolidate_type=self.consolidate_type,
-            update_fused=self.update_fused,
-        )
+            self.unified_mem = UnifiedMemoryBank(
+                n_groups=unified_n_groups,
+                dataloader_type=self.dataloader_type,
+                group_size=self.group_size,
+                token_size=unified_dim,
+                mem_length=self.mem_length,
+                retrieval_layers=self.retrieval_layers,
+                use_timestep_pe=self.use_timestep_pe,
+                fusion_type=self.fusion_type,
+                consolidate_type=self.consolidate_type,
+                update_fused=self.update_fused,
+            )
+
+            self.to_cog = nn.Linear(unified_dim, self.cog_token_size)
+            self.to_per = nn.Linear(unified_dim, self.per_token_size)
 
         self.action_model = ActionModel(
             model_type=action_model_type,
@@ -539,19 +632,36 @@ class MemoryVLA(nn.Module):
             1, expanded_indices.unsqueeze(1))  # [B, 1, D]
 
         vision_feats = self.vlm.vision_feats
-        per_tokens = self.per_compr(vision_feats)
 
-        cog_tokens = self.cog_mem_bank.process_batch(
-            tokens=cog_tokens,
-            episode_ids=episode_ids,
-            timesteps=timesteps,
-        )
+        if not self.use_unified_mem:
+            # === Original dual-bank path ===
+            per_tokens = self.per_compr(vision_feats)
 
-        per_tokens = self.per_mem_bank.process_batch(
-            tokens=per_tokens,
-            episode_ids=episode_ids,
-            timesteps=timesteps,
-        )
+            cog_tokens = self.cog_mem_bank.process_batch(
+                tokens=cog_tokens,
+                episode_ids=episode_ids,
+                timesteps=timesteps,
+            )
+
+            per_tokens = self.per_mem_bank.process_batch(
+                tokens=per_tokens,
+                episode_ids=episode_ids,
+                timesteps=timesteps,
+            )
+        else:
+            # === Unified memory bank path ===
+            vis_proj = self.vision_proj(vision_feats)   # [B, num_patches, unified_dim]
+            cog_proj = self.cog_proj(cog_tokens)         # [B, 1, unified_dim]
+            unified = torch.cat([cog_proj, vis_proj], dim=1)  # [B, 1+num_patches, unified_dim]
+
+            unified_fused = self.unified_mem.process_batch(
+                tokens=unified,
+                episode_ids=episode_ids,
+                timesteps=timesteps,
+            )
+
+            cog_tokens = self.to_cog(unified_fused[:, :1, :])   # [B, 1, cog_token_size]
+            per_tokens = self.to_per(unified_fused[:, 1:, :])   # [B, num_patches, per_token_size]
 
         # Repeat 'actions' 'repeated_diffusion_steps' times, resulting in [repeated_diffusion_steps*B, T, D]
         actions_future = actions[:, -(self.future_action_window_size+1):, :]
@@ -756,30 +866,50 @@ class MemoryVLA(nn.Module):
         cog_tokens = cog_tokens.unsqueeze(1).to(model_dtype)  # [B, 1, D]
 
         vision_feats = self.vlm.vision_feats
-        per_tokens = self.per_compr(vision_feats)
 
         assert episode_first_frame in ['True', 'False'], "episode_first_frame must be 'True' or 'False'"
         if episode_first_frame == 'True':
             print(" ** reset memory ** ")
-            self.cog_mem_bank.reset()
-            self.per_mem_bank.reset()
+            if not self.use_unified_mem:
+                self.cog_mem_bank.reset()
+                self.per_mem_bank.reset()
+            else:
+                self.unified_mem.reset()
             self.cur_timestep = 0
 
         episode_ids = [0]
         timesteps = [torch.tensor(self.cur_timestep, device=cog_tokens.device)]
         self.cur_timestep += 1
 
-        cog_tokens = self.cog_mem_bank.process_batch(
-            tokens=cog_tokens,
-            episode_ids=episode_ids,
-            timesteps=timesteps,
-        )
+        if not self.use_unified_mem:
+            # === Original dual-bank path ===
+            per_tokens = self.per_compr(vision_feats)
 
-        per_tokens = self.per_mem_bank.process_batch(
-            tokens=per_tokens,
-            episode_ids=episode_ids,
-            timesteps=timesteps,
-        )
+            cog_tokens = self.cog_mem_bank.process_batch(
+                tokens=cog_tokens,
+                episode_ids=episode_ids,
+                timesteps=timesteps,
+            )
+
+            per_tokens = self.per_mem_bank.process_batch(
+                tokens=per_tokens,
+                episode_ids=episode_ids,
+                timesteps=timesteps,
+            )
+        else:
+            # === Unified memory bank path ===
+            vis_proj = self.vision_proj(vision_feats)   # [1, num_patches, unified_dim]
+            cog_proj = self.cog_proj(cog_tokens)         # [1, 1, unified_dim]
+            unified = torch.cat([cog_proj, vis_proj], dim=1)
+
+            unified_fused = self.unified_mem.process_batch(
+                tokens=unified,
+                episode_ids=episode_ids,
+                timesteps=timesteps,
+            )
+
+            cog_tokens = self.to_cog(unified_fused[:, :1, :])
+            per_tokens = self.to_per(unified_fused[:, 1:, :])
 
         # Sample random noise
         B = cog_tokens.shape[0]
