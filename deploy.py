@@ -52,14 +52,12 @@ class MemVLAService:
           load_for_training=False,
           **kwargs,
         )
-        self.vla = self.vla.to("cuda").eval()
         if use_bf16:
             print("Using bfloat16 inference mode (auto-conversion for all modules).")
-            self.vla = self.vla.to(torch.bfloat16)
+            self.vla = self.vla.to(torch.bfloat16).to("cuda").eval()
         else:
             print("Using standard float32 inference mode.")
-            self.vla = self.vla.to(torch.float32)
-
+            self.vla = self.vla.to("cuda").eval()
         self.cfg_scale = cfg_scale
 
         self.image_size = image_size

@@ -10,7 +10,7 @@ authors = [
 description = "MemoryVLA: Perceptual-Cognitive Memory in Vision-Language-Action Models for Robotic Manipulation"
 version = "0.0.1"
 readme = "README.md"
-requires-python = "==3.10"
+requires-python = ">=3.10,<3.11"
 keywords = ["vision-language-actions models", " robotic manipulation", "memory"]
 license = {file = "LICENSE"}
 classifiers = [
