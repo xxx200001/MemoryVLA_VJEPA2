@@ -83,26 +83,32 @@ class VJEPA2ImageTransform:
 
 def _import_vjepa2_modules():
     """
-    Lazily import V-JEPA 2 source modules.
-    Assumes the vjepa2 repo is available either:
-      (a) installed as a package, or
-      (b) accessible via VJEPA2_ROOT env var / sibling directory.
+    Import V-JEPA 2 source modules from VJEPA2_ROOT.
+
+    Resolution order:
+      1. VJEPA2_ROOT environment variable (recommended)
+      2. Sibling 'vjepa2' directory next to this project root
     """
-    try:
-        from src.models.vision_transformer import VisionTransformer as ViT
-        from src.models.utils.modules import Block
-        return ViT, Block
-    except ImportError:
-        import os
-        vjepa2_root = os.environ.get(
-            "VJEPA2_ROOT",
-            str(Path(__file__).resolve().parents[4] / "vjepa2"),
+    import os, importlib
+
+    vjepa2_root = os.environ.get("VJEPA2_ROOT")
+    if vjepa2_root is None:
+        # Fallback: look for sibling directory relative to project root
+        vjepa2_root = str(Path(__file__).resolve().parents[4] / "vjepa2")
+
+    if not Path(vjepa2_root).is_dir():
+        raise FileNotFoundError(
+            f"V-JEPA 2 source not found at '{vjepa2_root}'. "
+            f"Set VJEPA2_ROOT env var to the vjepa2 repo root."
         )
-        if vjepa2_root not in sys.path:
-            sys.path.insert(0, vjepa2_root)
-        from src.models.vision_transformer import VisionTransformer as ViT
-        from src.models.utils.modules import Block
-        return ViT, Block
+
+    # Add to sys.path only once, at position 0 to take priority
+    if vjepa2_root not in sys.path:
+        sys.path.insert(0, vjepa2_root)
+
+    from src.models.vision_transformer import VisionTransformer as ViT
+    from src.models.utils.modules import Block
+    return ViT, Block
 
 
 class VJEPA2ViTBackbone(VisionBackbone):
