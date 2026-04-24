@@ -230,7 +230,7 @@ class VJEPA2ViTBackbone(VisionBackbone):
             # [B, 3, H, W] -> [B, 3, tubelet_size, H, W] (repeat frame)
             pixel_values = pixel_values.unsqueeze(2).expand(
                 -1, -1, self._tubelet_size, -1, -1
-            )  # duplicate frame tubelet_size times
+            ).contiguous()  # Conv3d requires contiguous memory
 
         K = pixel_values.shape[2]  # number of temporal frames
         temporal_tokens = K // self._tubelet_size  # e.g. 4/2=2
