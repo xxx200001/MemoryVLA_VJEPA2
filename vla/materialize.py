@@ -34,6 +34,7 @@ def get_vla_dataset_and_collator(
     load_all_data_for_training: bool = True,  # Load all data for training, or only a subset
     dataloader_type: str = "group",
     group_size: int = 16,
+    num_video_frames: int = 1,
 ) -> Tuple[Dataset, ActionTokenizer, PaddedCollatorForActionPrediction]:
     """Initialize RLDS Dataset (wraps TFDS), ActionTokenizer, and initialize transform/collation functions."""
 
@@ -44,6 +45,7 @@ def get_vla_dataset_and_collator(
         image_transform,
         prompt_builder_fn,
         predict_stop_token=predict_stop_token,
+        num_video_frames=num_video_frames,
     )
 
     collator = PaddedCollatorForActionPrediction(
@@ -62,6 +64,7 @@ def get_vla_dataset_and_collator(
             future_action_window_size=future_action_window_size,
             image_aug=image_aug,
             load_all_data_for_training=load_all_data_for_training,
+            obs_window_size=num_video_frames,
         )
     elif dataloader_type == "group":
         assert group_size > 1, "Group size must be greater than 1 for grouped dataset"
@@ -76,6 +79,7 @@ def get_vla_dataset_and_collator(
             image_aug=image_aug,
             load_all_data_for_training=load_all_data_for_training,
             group_size=group_size,
+            obs_window_size=num_video_frames,
         )
     elif dataloader_type == "stream":
         dataset = StreamRLDSDataset(
@@ -88,6 +92,7 @@ def get_vla_dataset_and_collator(
             future_action_window_size=future_action_window_size,
             image_aug=image_aug,
             load_all_data_for_training=load_all_data_for_training,
+            obs_window_size=num_video_frames,
         )
 
     else:

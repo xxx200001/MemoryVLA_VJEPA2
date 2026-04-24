@@ -82,13 +82,17 @@ LLM_BACKBONES = {
 
 
 def get_vision_backbone_and_transform(
-    vision_backbone_id: str, image_resize_strategy: str
+    vision_backbone_id: str, image_resize_strategy: str, num_video_frames: int = 1,
 ) -> Tuple[VisionBackbone, ImageTransform]:
     """Instantiate a Vision Backbone, returning both the nn.Module wrapper class and default Image Transform."""
     if vision_backbone_id in VISION_BACKBONES:
         vision_cfg = VISION_BACKBONES[vision_backbone_id]
+        kwargs = dict(vision_cfg["kwargs"])
+        # V-JEPA 2 supports multi-frame video input
+        if vision_cfg["cls"] is VJEPA2ViTBackbone:
+            kwargs["num_video_frames"] = num_video_frames
         vision_backbone: VisionBackbone = vision_cfg["cls"](
-            vision_backbone_id, image_resize_strategy, **vision_cfg["kwargs"]
+            vision_backbone_id, image_resize_strategy, **kwargs
         )
         image_transform = vision_backbone.get_image_transform()
         return vision_backbone, image_transform

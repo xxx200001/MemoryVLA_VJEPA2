@@ -398,6 +398,8 @@ class MemoryVLA(nn.Module):
         self.update_fused = update_fused
 
         self.cur_timestep = 0
+        self.num_video_frames = kwargs.get('num_video_frames', 1)
+        self.frame_buffer = []  # frame buffer for multi-frame inference
 
         # Compute vision_dim: dual-stream (DINOv2+SigLIP) or single-stream (V-JEPA 2, etc.)
         if hasattr(self.vlm.vision_backbone, 'dino_featurizer'):
@@ -728,7 +730,16 @@ class MemoryVLA(nn.Module):
 
         # Preprocess Image
         pixel_values = image_transform(image)
-        if isinstance(pixel_values, torch.Tensor):
+
+        # Multi-frame buffering for V-JEPA 2 video mode
+        if self.num_video_frames > 1 and isinstance(pixel_values, torch.Tensor):
+            self.frame_buffer.append(pixel_values)  # [3, H, W]
+            if len(self.frame_buffer) > self.num_video_frames:
+                self.frame_buffer = self.frame_buffer[-self.num_video_frames:]
+            # Stack frames: [3, K, H, W]
+            stacked = torch.stack(self.frame_buffer, dim=1)  # [3, K, H, W]
+            pixel_values = stacked[None, ...].to(self.vlm.device, dtype=model_dtype)  # [1, 3, K, H, W]
+        elif isinstance(pixel_values, torch.Tensor):
             pixel_values = pixel_values[None, ...].to(self.vlm.device, dtype=model_dtype)
         elif isinstance(pixel_values, dict):
             pixel_values = {k: v[None, ...].to(self.vlm.device, dtype=model_dtype) for k, v in pixel_values.items()}
@@ -764,6 +775,7 @@ class MemoryVLA(nn.Module):
             self.cog_mem_bank.reset()
             self.per_mem_bank.reset()
             self.cur_timestep = 0
+            self.frame_buffer = []  # clear frame buffer on new episode
 
         episode_ids = [0]
         timesteps = [torch.tensor(self.cur_timestep, device=cog_tokens.device)]

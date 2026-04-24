@@ -33,16 +33,19 @@ VJEPA2_CONFIGS = {
         "arch": "vit_large",        # embed_dim=1024, depth=24, heads=16
         "img_size": 224,
         "patch_size": 16,
+        "tubelet_size": 2,          # pretrained Conv3d kernel: [D, 3, 2, 16, 16]
     },
     "vjepa2-vit-huge-224px": {
         "arch": "vit_huge",         # embed_dim=1280, depth=32, heads=16
         "img_size": 224,
         "patch_size": 16,
+        "tubelet_size": 2,
     },
     "vjepa2-vit-giant-256px": {
         "arch": "vit_giant_xformers",  # embed_dim=1408, depth=40, heads=22
         "img_size": 256,
         "patch_size": 16,
+        "tubelet_size": 2,
     },
 }
 
@@ -122,6 +125,7 @@ class VJEPA2ViTBackbone(VisionBackbone):
         image_resize_strategy: str,
         default_image_size: int = 224,
         vjepa2_checkpoint_path: Optional[str] = None,
+        num_video_frames: int = 1,
     ) -> None:
         super().__init__(
             vision_backbone_id,
@@ -133,19 +137,29 @@ class VJEPA2ViTBackbone(VisionBackbone):
         arch_name = cfg["arch"]
         img_size = cfg["img_size"]
         patch_size = cfg["patch_size"]
+        tubelet_size = cfg.get("tubelet_size", 2)
+
+        self._num_video_frames = num_video_frames
+        self._tubelet_size = tubelet_size
 
         # Import V-JEPA 2 modules
         self._ViTCls, self._BlockCls = _import_vjepa2_modules()
 
-        # Build encoder in image mode
+        # Build encoder: num_frames must be divisible by tubelet_size
+        # For single-frame mode, we duplicate to min_frames = tubelet_size
+        effective_frames = max(num_video_frames, tubelet_size)
+        assert effective_frames % tubelet_size == 0, (
+            f"num_video_frames={num_video_frames} must be divisible by tubelet_size={tubelet_size}"
+        )
+
         from src.models import vision_transformer as vit_module
 
         build_fn = vit_module.__dict__[arch_name]
         self.featurizer = build_fn(
             patch_size=patch_size,
             img_size=(img_size, img_size),
-            num_frames=1,       # image mode
-            tubelet_size=1,     # image mode
+            num_frames=effective_frames,
+            tubelet_size=tubelet_size,     # pretrained: Conv3d kernel (2, 16, 16)
             use_sdpa=True,
             use_rope=True,
             use_silu=False,
@@ -206,14 +220,31 @@ class VJEPA2ViTBackbone(VisionBackbone):
     ) -> torch.Tensor:
         """
         Args:
-            pixel_values: [B, 3, H, W] tensor (single-stream, not dict)
+            pixel_values: [B, 3, K, H, W] (multi-frame) or [B, 3, H, W] (single-frame)
 
         Returns:
-            Patch features [B, num_patches, embed_dim]
+            Patch features [B, num_patches, embed_dim]  (always spatial-only)
         """
-        # V-JEPA 2 with tubelet_size=1 uses Conv2d patch_embed,
-        # so it expects 4D [B, C, H, W] directly — no unsqueeze needed.
-        return self.featurizer(pixel_values)
+        # Handle single-frame: duplicate to meet tubelet_size requirement
+        if pixel_values.dim() == 4:
+            # [B, 3, H, W] -> [B, 3, tubelet_size, H, W] (repeat frame)
+            pixel_values = pixel_values.unsqueeze(2).expand(
+                -1, -1, self._tubelet_size, -1, -1
+            )  # duplicate frame tubelet_size times
+
+        K = pixel_values.shape[2]  # number of temporal frames
+        temporal_tokens = K // self._tubelet_size  # e.g. 4/2=2
+
+        features = self.featurizer(pixel_values)  # [B, temporal_tokens * 196, embed_dim]
+
+        # Temporal pooling: average over temporal groups to get single-frame shape
+        if temporal_tokens > 1:
+            spatial_patches = self._num_patches  # 196
+            # [B, T*196, D] -> [B, T, 196, D] -> mean(dim=1) -> [B, 196, D]
+            features = features.reshape(-1, temporal_tokens, spatial_patches, features.shape[-1])
+            features = features.mean(dim=1)
+
+        return features  # [B, num_patches, embed_dim]
 
     @property
     def default_image_resolution(self) -> Tuple[int, int, int]:

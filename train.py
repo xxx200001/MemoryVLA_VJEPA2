@@ -78,6 +78,7 @@ class TrainConfig:
     fusion_type: str = 'gate' # Memory fusion type, chose from ['gate', 'add']
     consolidate_type: str = 'tome' # Memory consolidate type, chose from ['fifo', 'tome']
     update_fused: bool = False # Whether to update fused memory
+    num_video_frames: int = 1 # Number of frames for V-JEPA 2 video mode (1=single frame, 4=recommended)
 
 
     def __post_init__(self) -> None:
@@ -175,7 +176,8 @@ def train(cfg: TrainConfig) -> None:
             f"             Arch Specifier  =>> {model_cfg.arch_specifier}"
         )
         vision_backbone, image_transform = get_vision_backbone_and_transform(
-            model_cfg.vision_backbone_id, model_cfg.image_resize_strategy
+            model_cfg.vision_backbone_id, model_cfg.image_resize_strategy,
+            num_video_frames=cfg.num_video_frames,
         )
         llm_backbone, tokenizer = get_llm_backbone_and_tokenizer(
             model_cfg.llm_backbone_id, llm_max_length=model_cfg.llm_max_length,
@@ -240,6 +242,7 @@ def train(cfg: TrainConfig) -> None:
         future_action_window_size=cfg.future_action_window_size,
         dataloader_type=cfg.dataloader_type,
         group_size=cfg.group_size,
+        num_video_frames=cfg.num_video_frames,
     )
 
     # Save dataset statistics for de-normalization at inference time

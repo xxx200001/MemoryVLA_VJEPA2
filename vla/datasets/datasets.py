@@ -35,6 +35,7 @@ class RLDSBatchTransform:
     image_transform: ImageTransform
     prompt_builder_fn: Type[PromptBuilder]
     predict_stop_token: bool = True
+    num_video_frames: int = 1
 
     def __call__(self, rlds_batch: Dict[str, Any]) -> Dict[str, Any]:
         """Converts a RLDS batch to the format expected by the OpenVLA collator/models."""
@@ -46,7 +47,20 @@ class RLDSBatchTransform:
         else:
             dataset_name, action = rlds_batch["dataset_name"], rlds_batch["action"][0]
 
-        img = Image.fromarray(rlds_batch["observation"]["image_primary"][0])
+        # Multi-frame observation for V-JEPA 2 video mode
+        obs_images = rlds_batch["observation"]["image_primary"]
+        if self.num_video_frames > 1 and obs_images.shape[0] > 1:
+            frames = []
+            for i in range(obs_images.shape[0]):
+                frame = Image.fromarray(obs_images[i])
+                frames.append(self.image_transform(frame))  # each [3, H, W]
+            # Stack along new temporal dim: [3, K, H, W] for V-JEPA 2 Conv3d
+            pixel_values = torch.stack(frames, dim=1)  # [3, K, H, W]
+        else:
+            # Single-frame: original behavior (dual-stream returns dict, single-stream returns tensor)
+            img = Image.fromarray(obs_images[0])
+            pixel_values = self.image_transform(img)
+
         lang = rlds_batch["task"]["language_instruction"].decode().lower()
 
         # Construct Chat-based Prompt
@@ -66,7 +80,6 @@ class RLDSBatchTransform:
         # Tensorize =>> Run Image Transform to get `pixel_values` =>> Return
         #   =>> IMPORTANT :: IF WE'RE USING HF LLM.forward(..., labels=labels), SHIFTING HAPPENS _INSIDE_ MODEL!
         input_ids, labels = torch.tensor(input_ids), torch.tensor(labels)
-        pixel_values = self.image_transform(img)
 
         # Add future actions to batch
         if rlds_batch["action"].shape[0] > 1:
@@ -82,6 +95,9 @@ class RLDSBatchTransform:
             labels[-1] = IGNORE_INDEX
 
         timesteps = rlds_batch['observation']['timestep']
+        # When window_size > 1, timestep is [K]; take only the current (last) frame's timestep
+        if hasattr(timesteps, '__len__') and len(timesteps) > 1:
+            timesteps = timesteps[-1:]
 
         return dict(pixel_values=pixel_values,
                     input_ids=input_ids,
@@ -108,6 +124,7 @@ class RLDSDataset(IterableDataset):
         load_all_data_for_training: bool = True,
         load_depth=False,
         load_proprio=False,
+        obs_window_size: int = 1,
     ) -> None:
         """Lightweight wrapper around RLDS TFDS Pipeline for use with PyTorch/OpenVLA Data Loaders."""
         self.data_root_dir, self.data_mix, self.batch_transform = data_root_dir, data_mix, batch_transform
@@ -131,7 +148,7 @@ class RLDSDataset(IterableDataset):
         )
         rlds_config = dict(
             traj_transform_kwargs=dict(
-                window_size=1,                                    # If we wanted to feed / predict more than one step
+                window_size=obs_window_size,                       # K frames for V-JEPA 2 multi-frame mode (1 = single frame)
                 future_action_window_size=future_action_window_size,                        # For action chunking
                 skip_unlabeled=True,                                                        # Skip trajectories without language labels
                 #goal_relabeling_strategy="uniform",                                        # Goals are currently unused
