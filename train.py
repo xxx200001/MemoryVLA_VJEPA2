@@ -164,7 +164,27 @@ def train(cfg: TrainConfig) -> None:
         vla = load_vla(model_id_or_path=model_id_or_path, load_for_training=True, **kwargs)
 
     else:
-        vlm = load(model_id_or_path=cfg.vla.base_vlm, hf_token=cfg.hf_token, load_for_training=True)
+        # Build VLM from components (vision backbone + LLM backbone + projector)
+        from prismatic.conf import ModelConfig
+        from prismatic.models.materialize import get_vision_backbone_and_transform, get_llm_backbone_and_tokenizer, get_vlm
+        model_cfg = ModelConfig.get_choice_class(cfg.vla.base_vlm)()
+        overwatch.info(
+            f"Building VLM from scratch with:\n"
+            f"             Vision Backbone =>> {model_cfg.vision_backbone_id}\n"
+            f"             LLM Backbone    =>> {model_cfg.llm_backbone_id}\n"
+            f"             Arch Specifier  =>> {model_cfg.arch_specifier}"
+        )
+        vision_backbone, image_transform = get_vision_backbone_and_transform(
+            model_cfg.vision_backbone_id, model_cfg.image_resize_strategy
+        )
+        llm_backbone, tokenizer = get_llm_backbone_and_tokenizer(
+            model_cfg.llm_backbone_id, llm_max_length=model_cfg.llm_max_length,
+            hf_token=cfg.hf_token, inference_mode=False,
+        )
+        vlm = get_vlm(
+            model_cfg.model_id, model_cfg.arch_specifier, vision_backbone, llm_backbone,
+            enable_mixed_precision_training=model_cfg.enable_mixed_precision_training,
+        )
         overwatch.info("Creating VLA from Base VLM")
         if cfg.use_ema:
             overwatch.info("Creating EMA for Diffusion")
